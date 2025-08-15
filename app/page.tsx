@@ -1,103 +1,165 @@
-import Image from "next/image";
+'use client';
+import { useState, useEffect } from 'react';
+import SearchBar from './components/SearchBar';
+import ListingCard from './components/ListingCard';
+import FilterSidebar from './components/FilterSidebar';
+import { Listing } from './types/listing';
+
+// Mock data for now - replace with Firebase later
+const mockListings: Listing[] = [
+  {
+    id: '1',
+    title: 'Cozy Dorm Near UP Diliman',
+    images: ['/placeholder-dorm1.jpg'],
+    address: 'Quezon City, Manila',
+    price: 8000,
+    description: 'Clean and affordable dorm perfect for students',
+    schoolProximity: 'UP Diliman - 5 min walk',
+    rules: {
+      visitorsAllowed: true,
+      curfew: '22:00',
+      genderRestricted: 'All',
+    },
+    amenities: ['WiFi', 'Laundry', 'Kitchen'],
+    isRented: false,
+    acceptsRoommates: false,
+    landlordId: 'landlord1',
+    avgRating: 4.5,
+    totalReviews: 12,
+    createdAt: '2024-01-01',
+  },
+  {
+    id: '2',
+    title: 'Modern Studio Apartment',
+    images: ['/placeholder-apartment1.jpg'],
+    address: 'Taft Avenue, Manila',
+    price: 12000,
+    description: 'Fully furnished studio apartment near DLSU',
+    schoolProximity: 'DLSU - 10 min walk',
+    rules: {
+      visitorsAllowed: false,
+      genderRestricted: 'Female',
+    },
+    amenities: ['WiFi', 'AC', 'Security', 'Parking'],
+    isRented: true,
+    acceptsRoommates: true,
+    landlordId: 'landlord2',
+    avgRating: 4.8,
+    totalReviews: 8,
+    createdAt: '2024-01-02',
+  },
+];
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [listings, setListings] = useState<Listing[]>(mockListings);
+  const [filteredListings, setFilteredListings] = useState<Listing[]>(mockListings);
+  const [searchQuery, setSearchQuery] = useState('');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    filterListings(query, listings);
+  };
+
+  const handleFilterChange = (filters: any) => {
+    // Apply filters logic here
+    let filtered = listings;
+
+    if (searchQuery) {
+      filtered = filtered.filter(listing =>
+        listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        listing.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        listing.schoolProximity.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (filters.visitorsAllowed !== undefined) {
+      filtered = filtered.filter(listing => listing.rules.visitorsAllowed === filters.visitorsAllowed);
+    }
+
+    if (filters.acceptsRoommates) {
+      filtered = filtered.filter(listing => listing.acceptsRoommates);
+    }
+
+    if (filters.priceRange) {
+      filtered = filtered.filter(listing => 
+        listing.price >= filters.priceRange[0] && listing.price <= filters.priceRange[1]
+      );
+    }
+
+    setFilteredListings(filtered);
+  };
+
+  const filterListings = (query: string, listingsToFilter: Listing[]) => {
+    if (!query) {
+      setFilteredListings(listingsToFilter);
+      return;
+    }
+
+    const filtered = listingsToFilter.filter(listing =>
+      listing.title.toLowerCase().includes(query.toLowerCase()) ||
+      listing.address.toLowerCase().includes(query.toLowerCase()) ||
+      listing.schoolProximity.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredListings(filtered);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              Find Your Perfect Student Housing
+            </h1>
+            <p className="text-xl md:text-2xl text-blue-100">
+              Discover affordable dorms and apartments near Manila's top universities
+            </p>
+          </div>
+          <SearchBar onSearch={handleSearch} />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar */}
+          <div className="lg:w-1/4">
+            <FilterSidebar onFilterChange={handleFilterChange} />
+          </div>
+
+          {/* Listings Grid */}
+          <div className="lg:w-3/4">
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900">
+                {filteredListings.length} Properties Found
+              </h2>
+              {searchQuery && (
+                <p className="text-gray-600 mt-1">
+                  Showing results for "{searchQuery}"
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredListings.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+
+            {filteredListings.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">
+                  No properties found matching your criteria.
+                </p>
+                <p className="text-gray-400 mt-2">
+                  Try adjusting your filters or search terms.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
